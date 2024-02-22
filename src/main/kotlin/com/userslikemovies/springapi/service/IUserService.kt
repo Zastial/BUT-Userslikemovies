@@ -10,6 +10,4 @@ interface IUserService {
     fun deleteUser(email : String) : Result<User>
     fun addUserFavoriteMovie(email : String, movieId : Int) : Result<User>
     fun removeUserFavoriteMovie(email : String, movieId : Int) : Result<User>
-    fun movieDeleted(movieId : Int) : Result<Unit>
-    fun getMoviePreferenceNumber(movieId : Int) : Result<Int>
 }

@@ -7,11 +7,11 @@ import jakarta.persistence.*
 class User(
         @Id
         @GeneratedValue
-        val id : String,
+        val id : Int,
         val email: String,
         val firstName: String,
         val lastName: String,
         val age: Int,
         @ElementCollection
-        val moviesId: List<Long> = listOf()
+        val moviesId: List<Int> = listOf()
 )
