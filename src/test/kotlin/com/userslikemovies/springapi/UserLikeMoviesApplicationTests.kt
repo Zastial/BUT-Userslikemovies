@@ -1,4 +1,4 @@
-package com.userslikemovies.UserLikeMovies
+package com.userslikemovies.springapi
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest

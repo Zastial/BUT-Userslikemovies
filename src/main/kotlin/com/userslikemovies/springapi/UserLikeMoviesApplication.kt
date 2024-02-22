@@ -1,4 +1,4 @@
-package com.userslikemovies.UserLikeMovies
+package com.userslikemovies.springapi
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
