@@ -10,9 +10,10 @@ import org.springframework.stereotype.Repository
 import org.springframework.web.client.getForEntity
 
 @Repository
-class MovieRepository(val jpa : JpaRepositoryMovie) : IMovieRepository {
+class MovieRepository(val jpa : JpaRepositoryMovie, val customProperties : CustomProperties) : IMovieRepository {
 
-    //val restTemplate = RestTemplateBuilder().rootUri(customProperties.url).build()
+    val restTemplate = RestTemplateBuilder().rootUri(customProperties.baseurl).build()
+
     //val result: ResponseEntity<List<UserDTO>> = restTemplate.getForEntity("/api/users")
     override fun movieDeleted(movieId: Int): Result<Unit> {
         return try {

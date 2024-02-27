@@ -7,8 +7,5 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @EnableConfigurationProperties(CustomProperties::class)
 class PropertiesConfig {
-    @Bean
-    fun urlConfig():CustomProperties{
-        return CustomProperties()
-    }
+
 }
