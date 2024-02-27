@@ -1,9 +1,8 @@
 package com.userslikemovies.springapi.controller.dto
 
+import com.userslikemovies.springapi.domain.Movie
 import com.userslikemovies.springapi.domain.User
 import jakarta.validation.constraints.Email
-import jakarta.validation.constraints.Max
-import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Size
 
 data class UserDTO(
@@ -11,9 +10,7 @@ data class UserDTO(
         @field:Size(min = 1, max = 30) val firstName: String,
         @field:Size(min = 1, max = 30) val lastName: String,
         @field:Size val age: Int,
-        @field:Size(min = 1, max = 30) val moviesId: List<Int?>
+        @field:Size(min = 1, max = 30) val movies: List<Movie?>
 ) {
-    fun asUser() = User(email, firstName, lastName, 15, emptyList())
+    fun asUser() = User(email, firstName, lastName, age, movies)
 }
-
-fun User.asUserDTO() = UserDTO(this.email, this.firstName, this.lastName, this.age, this.moviesId)

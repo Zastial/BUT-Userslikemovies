@@ -26,14 +26,14 @@ class UserController(val userService: IUserService) {
         userService.createUser(userDTO.asUser())
     }
 
-    @PutMapping("api/v1/users")
-    fun updateUser(@RequestBody userDTO : UserDTO) {
-        userService.updateUser(userDTO.asUser())
+    @PutMapping("api/v1/users/{email}")
+    fun updateUser(@PathVariable email : String, @RequestBody userDTO : UserDTO) {
+        userService.updateUser(email, userDTO.asUser())
     }
 
     @DeleteMapping("api/v1/users/{email}")
     fun deleteUser(@PathVariable email : String) {
-        userService.deleteUser(email)
+        val result = userService.deleteUser(email)
     }
 
     @GetMapping("api/v1/users/{email}")
@@ -48,4 +48,10 @@ class UserController(val userService: IUserService) {
     fun deletefavoriteMovie(@PathVariable @Email email : String, @PathVariable movieId : Int) {
         userService.removeUserFavoriteMovie(email, movieId)
     }
+
+    @GetMapping("/api/v1/movies/{movieId}")
+    fun getMoviePreferenceNumber(@PathVariable movieId : Int) = userService.getMoviePreferenceNumber(movieId)
+
+    @DeleteMapping("/api/v1/movies/{movieId}")
+    fun movieDeleted(@PathVariable movieId : Int) = userService.movieDeleted(movieId)
 }

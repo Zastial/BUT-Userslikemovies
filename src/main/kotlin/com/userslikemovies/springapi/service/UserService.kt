@@ -10,8 +10,10 @@ class UserService(private val userRepository : IUserRepository) : IUserService {
     override fun getUsers() = userRepository.getUsers()
     override fun getUserByEmail(email: String) = userRepository.getUserByEmail(email)
     override fun createUser(user : User) = userRepository.createUser(user)
-    override fun updateUser(user : User) = userRepository.updateUser(user)
+    override fun updateUser(email : String, user : User) = userRepository.updateUser(email, user)
     override fun deleteUser(email: String) = userRepository.deleteUser(email)
     override fun addUserFavoriteMovie(email: String, movieId: Int) = userRepository.addUserFavoriteMovie(email, movieId)
     override fun removeUserFavoriteMovie(email: String, movieId: Int) = userRepository.removeUserFavoriteMovie(email, movieId)
+    override fun movieDeleted(movieId: Int) = userRepository.movieDeleted(movieId)
+    override fun getMoviePreferenceNumber(movieId: Int) = userRepository.getMoviePreferenceNumber(movieId)
 }
