@@ -12,5 +12,5 @@ class User(
         var lastName: String,
         var age: Int,
         @ManyToMany(cascade = [CascadeType.ALL])
-        var movies: List<Movie?> = listOf()
+        var favoriteMovies: MutableList<Movie?> = mutableListOf()
 )

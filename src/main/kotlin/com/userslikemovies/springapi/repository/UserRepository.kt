@@ -1,7 +1,13 @@
 package com.userslikemovies.springapi.repository
 
+import com.userslikemovies.springapi.Exceptions.InvalidMovieIdException
+import com.userslikemovies.springapi.Exceptions.MovieNotFoundException
+import com.userslikemovies.springapi.Exceptions.UserAlreadyExistsException
+import com.userslikemovies.springapi.Exceptions.UserNotFoundException
 import com.userslikemovies.springapi.config.CustomProperties
+import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
 import com.userslikemovies.springapi.domain.Movie
+import com.userslikemovies.springapi.domain.MovieAPI
 import com.userslikemovies.springapi.domain.User
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.data.repository.findByIdOrNull
@@ -12,7 +18,7 @@ import org.springframework.web.client.getForEntity
 import java.util.*
 
 @Repository
-class UserRepository(val jpa : JpaRepositoryUser, private final val customProperties : CustomProperties) : IUserRepository {
+class UserRepository(val jpa : JpaRepositoryUser, private val customProperties : CustomProperties) : IUserRepository {
 
     val restTemplate: RestTemplate = RestTemplateBuilder().rootUri(customProperties.baseurl).build()
 
@@ -25,27 +31,31 @@ class UserRepository(val jpa : JpaRepositoryUser, private final val customProper
 
     }
 
-    override fun createUser(user: User): User? {
+    override fun createUser(user: User): Pair<User?, Exception?>{
         val doesUserAlreadyExists = getUserByEmail(user.email)
         if (doesUserAlreadyExists != null) {
-            return null
+            return Pair(null, UserAlreadyExistsException())
         }
-        return jpa.save(user)
+        return try {
+            Pair(jpa.save(user), null)
+        } catch (e: Exception) {
+            Pair(null, e)
+        }
     }
 
-    override fun updateUser(email : String, user : User): User? {
-        getUserByEmail(email) ?: return null
+    override fun updateUser(email : String, user : User): Pair<User?, Exception?> {
+        getUserByEmail(email) ?: return Pair(null, UserNotFoundException())
 
         val userByEmail = jpa.findById(email).get()
         userByEmail.firstName = user.firstName
         userByEmail.lastName = user.lastName
         userByEmail.age = user.age
-        userByEmail.movies = user.movies
+        userByEmail.favoriteMovies = user.favoriteMovies
 
         return try {
-            jpa.save(userByEmail)
+            Pair(jpa.save(userByEmail), null)
         } catch (e: Exception) {
-            null
+            Pair(null, e)
         }
     }
 
@@ -59,66 +69,87 @@ class UserRepository(val jpa : JpaRepositoryUser, private final val customProper
         }
     }
 
-    override fun addUserFavoriteMovie(email: String, movieId: Int): User? {
+    override fun addUserFavoriteMovie(email: String, movieId: Int): Pair<User?, Exception?> {
+        if (movieId < 0) {
+            return Pair(null, InvalidMovieIdException())
+        }
+
         val user = jpa.findById(email)
-        val movie : ResponseEntity<Movie> = restTemplate.getForEntity("/movies/${movieId}")
+        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
-                user.get().movies.plus(movie.body)
-                jpa.save(user.get())
-                user.get()
+                val userDomain = user.get()
+                userDomain.favoriteMovies.add(movie.body!!.toMovie())
+                jpa.save(userDomain)
+                Pair(userDomain, null)
             } else {
-                null
+                Pair(null, UserNotFoundException())
             }
         }
-        return null
+        return Pair(null, MovieNotFoundException())
     }
 
-    override fun removeUserFavoriteMovie(email: String, movieId: Int): User? {
+    override fun removeUserFavoriteMovie(email: String, movieId: Int): Pair<User?, Exception?> {
+        if (movieId < 0) {
+            return Pair(null, InvalidMovieIdException())
+        }
+
         val user = jpa.findById(email)
-        val movie : ResponseEntity<Movie> = restTemplate.getForEntity("/movies/${movieId}")
+        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
-                user.get().movies.minus(movie.body)
+                user.get().favoriteMovies.removeIf { it!!.id == movieId }
                 jpa.save(user.get())
-                user.get()
+                Pair(user.get(), null)
             } else {
-                null
+                Pair(null, UserNotFoundException())
             }
         }
-        return null
+        return Pair(null, MovieNotFoundException())
     }
 
-    override fun movieDeleted(movieId: Int): Result<Unit> {
+    override fun movieDeleted(movieId: Int): Exception? {
+        if (movieId < 0) {
+            return InvalidMovieIdException()
+        }
+
         val users = jpa.findAll()
-        val movieById: ResponseEntity<Movie> = restTemplate.getForEntity("/movies/${movieId}")
+        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
 
         if (movieById.body != null) {
-            users.forEach {
-                it.movies.minus(movieById)
+            users.forEach {user ->
+                user.favoriteMovies.removeIf { it!!.id == movieId }
+                jpa.save(user)
             }
-            return Result.success(Unit)
+            return null
         }
-        return Result.failure(Exception("No movie found"))
+        return MovieNotFoundException()
     }
 
-    override fun getMoviePreferenceNumber(movieId: Int): Int? {
+    override fun getMoviePreferenceNumber(movieId: Int): Pair<FavoriteMovieDTO?, Exception?> {
+        if (movieId < 0) {
+            return Pair(null, InvalidMovieIdException())
+        }
+
         val users = jpa.findAll()
-        val movieById: ResponseEntity<Movie> = restTemplate.getForEntity("/movies/${movieId}")
+        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
 
         var result = 0
         if (movieById.body != null) {
             users.forEach {user ->
-                user.movies.forEach {
+                user.favoriteMovies.forEach {
                     if (it!!.id == movieId) {
                         result++
                     }
                 }
             }
-            return result
+
+            val releaseDate = movieById.body!!.year.toString() + "-" + movieById.body!!.month.toString()
+            val favoriteMovieDTO = FavoriteMovieDTO(movieById.body!!.id, movieById.body!!.name, releaseDate, result)
+            return Pair(favoriteMovieDTO, null)
         }
-        return null
+        return Pair(null, MovieNotFoundException())
     }
 }

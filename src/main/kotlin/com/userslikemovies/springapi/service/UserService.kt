@@ -1,14 +1,24 @@
 package com.userslikemovies.springapi.service
 
+import com.userslikemovies.springapi.Exceptions.InvalidAgeException
+import com.userslikemovies.springapi.Exceptions.UserNotFoundException
+import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
 import com.userslikemovies.springapi.domain.User
 import com.userslikemovies.springapi.repository.IUserRepository
-import com.userslikemovies.springapi.repository.UserRepository
 import org.springframework.stereotype.Service
 
 @Service
 class UserService(private val userRepository : IUserRepository) : IUserService {
-    override fun getUsers() : Result<List<User>>  {
-        return Result.success(userRepository.getUsers())
+    override fun getUsers(age : Int?) : Result<List<User>>  {
+        return if (age != null) {
+            if (age >= 15) {
+                Result.success(userRepository.getUsers())
+            } else {
+                Result.failure(InvalidAgeException())
+            }
+        } else {
+            Result.success(userRepository.getUsers())
+        }
     }
 
     override fun getUserByEmail(email: String): Result<User> {
@@ -16,23 +26,23 @@ class UserService(private val userRepository : IUserRepository) : IUserService {
         if (user != null) {
             return Result.success(user)
         }
-        return Result.failure(Exception("User not found"))
+        return Result.failure(UserNotFoundException())
     }
 
     override fun createUser(user : User): Result<User> {
-        val createdUser = userRepository.createUser(user)
-        if (createdUser != null) {
-            return Result.success(user)
+        val (_, error) = userRepository.createUser(user)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("User already exists"))
+        return Result.success(user)
     }
 
     override fun updateUser(email : String, user : User): Result<User> {
-       val updatedUser = userRepository.updateUser(email, user)
-        if (updatedUser != null) {
-            return Result.success(user)
+       val (_, error) = userRepository.updateUser(email, user)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("Error while saving updates"))
+        return Result.success(user)
     }
 
     override fun deleteUser(email: String): Result<User> {
@@ -44,30 +54,30 @@ class UserService(private val userRepository : IUserRepository) : IUserService {
     }
 
     override fun addUserFavoriteMovie(email: String, movieId: Int): Result<User> {
-        val user = userRepository.addUserFavoriteMovie(email, movieId)
-        if (user != null) {
-            return Result.success(user)
+        val (user, error) = userRepository.addUserFavoriteMovie(email, movieId)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("User not found")) // Add Custom error
+        return Result.success(user!!)
     }
 
     override fun removeUserFavoriteMovie(email: String, movieId: Int): Result<User> {
-        val user = userRepository.removeUserFavoriteMovie(email, movieId)
-        if (user != null) {
-            return Result.success(user)
+        val (user, error) = userRepository.removeUserFavoriteMovie(email, movieId)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("User not found")) // Add Custom error
+        return Result.success(user!!)
     }
 
-    override fun movieDeleted(movieId: Int): Result<Unit> {
+    override fun movieDeleted(movieId: Int): Exception? {
         return userRepository.movieDeleted(movieId)
     }
 
-    override fun getMoviePreferenceNumber(movieId: Int): Result<Int> {
-        val movieNumber = userRepository.getMoviePreferenceNumber(movieId)
-        if (movieNumber != null) {
-            return Result.success(movieNumber)
+    override fun getMoviePreferenceNumber(movieId: Int): Result<FavoriteMovieDTO> {
+        val (movieNumber, error) = userRepository.getMoviePreferenceNumber(movieId)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("This movie isn't liked very much")) // Add Custom error
+        return Result.success(movieNumber!!)
     }
 }

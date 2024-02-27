@@ -1,5 +1,7 @@
 package com.userslikemovies.springapi.controller
 
+import com.userslikemovies.springapi.controller.dto.AddMovieDTO
+import com.userslikemovies.springapi.controller.dto.UserCreationDTO
 import com.userslikemovies.springapi.controller.dto.UserDTO
 import com.userslikemovies.springapi.repository.IUserRepository
 import com.userslikemovies.springapi.service.IUserService
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -19,10 +22,10 @@ import org.springframework.web.bind.annotation.RestController
 class UserController(val userService: IUserService) {
 
     @GetMapping("/api/v1/users")
-    fun getUsers() = userService.getUsers()
+    fun getUsers(@RequestParam age : Int?) = userService.getUsers(age) // Gérer si users > 10
 
     @PostMapping("api/v1/users")
-    fun createUser(@RequestBody userDTO : UserDTO) {
+    fun createUser(@RequestBody userDTO : UserCreationDTO) {
         userService.createUser(userDTO.asUser())
     }
 
@@ -39,19 +42,19 @@ class UserController(val userService: IUserService) {
     @GetMapping("api/v1/users/{email}")
     fun getUserByEmail(@PathVariable @Email email: String) = userService.getUserByEmail(email)
 
-    @PostMapping("api/v1/users/{email}/favoritesMovies")
-    fun addFavoritesMovie(@PathVariable @Email email : String, @RequestBody movieId : Int) {
-        userService.addUserFavoriteMovie(email, movieId)
+    @PostMapping("api/v1/users/{email}/favoriteMovies")
+    fun addFavoritesMovie(@PathVariable @Email email : String, @RequestBody addMovie : AddMovieDTO) {
+       userService.addUserFavoriteMovie(email, addMovie.movieId)
     }
 
-    @DeleteMapping("api/v1/users/{email}/favoritesMovies/{movieId}")
+    @DeleteMapping("api/v1/users/{email}/favoriteMovies/{movieId}")
     fun deletefavoriteMovie(@PathVariable @Email email : String, @PathVariable movieId : Int) {
         userService.removeUserFavoriteMovie(email, movieId)
     }
 
-    @GetMapping("/api/v1/movies/{movieId}")
+    @GetMapping("api/v1/movies/{movieId}")
     fun getMoviePreferenceNumber(@PathVariable movieId : Int) = userService.getMoviePreferenceNumber(movieId)
 
-    @DeleteMapping("/api/v1/movies/{movieId}")
+    @DeleteMapping("api/v1/movies/{movieId}")
     fun movieDeleted(@PathVariable movieId : Int) = userService.movieDeleted(movieId)
 }
