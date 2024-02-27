@@ -6,8 +6,6 @@ import jakarta.persistence.*
 @Table(name = "utilisateur")
 class User(
         @Id
-        @GeneratedValue
-        val id : Int,
         val email: String,
         val firstName: String,
         val lastName: String,

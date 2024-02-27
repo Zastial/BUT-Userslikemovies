@@ -4,7 +4,7 @@ import com.userslikemovies.springapi.domain.User
 
 interface IUserService {
     fun getUsers() : List<User>
-    fun getUserByEmail(email : String) : Result<User>
+    fun getUserByEmail(email : String): Result<User>
     fun createUser(user : User) : Result<User>
     fun updateUser(user : User) : Result<User>
     fun deleteUser(email : String) : Result<User>
