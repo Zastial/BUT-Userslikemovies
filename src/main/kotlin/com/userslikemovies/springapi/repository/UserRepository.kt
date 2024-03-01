@@ -28,7 +28,6 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun getUserByEmail(email: String): User? {
         return jpa.findByIdOrNull(email)
-
     }
 
     override fun createUser(user: User): Pair<User?, Exception?>{
@@ -75,7 +74,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         }
 
         val user = jpa.findById(email)
-        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
+        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
@@ -96,7 +95,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         }
 
         val user = jpa.findById(email)
-        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
+        val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
@@ -116,7 +115,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         }
 
         val users = jpa.findAll()
-        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
+        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
 
         if (movieById.body != null) {
             users.forEach {user ->
@@ -134,7 +133,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         }
 
         val users = jpa.findAll()
-        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/movies/${movieId}")
+        val movieById: ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
 
         var result = 0
         if (movieById.body != null) {
