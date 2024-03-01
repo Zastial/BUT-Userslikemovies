@@ -112,7 +112,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun movieDeleted(movieId: Int): Exception? {
         if (movieId < 0) {
-            return InvalidMovieIdException()
+            return MovieNotFoundException()
         }
 
         val users = jpa.findAll()
