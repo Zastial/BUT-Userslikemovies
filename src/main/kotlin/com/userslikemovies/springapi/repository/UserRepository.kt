@@ -3,7 +3,6 @@ package com.userslikemovies.springapi.repository
 import com.userslikemovies.springapi.Exceptions.*
 import com.userslikemovies.springapi.config.CustomProperties
 import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
-import com.userslikemovies.springapi.domain.Movie
 import com.userslikemovies.springapi.domain.MovieAPI
 import com.userslikemovies.springapi.domain.User
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Repository
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
-import java.util.*
 
 @Repository
 class UserRepository(val jpa : JpaRepositoryUser, private val customProperties : CustomProperties) : IUserRepository {

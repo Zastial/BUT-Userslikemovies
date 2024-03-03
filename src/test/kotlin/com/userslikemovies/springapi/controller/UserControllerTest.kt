@@ -2,13 +2,12 @@ package com.userslikemovies.springapi.controller
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.userslikemovies.springapi.controller.dto.AddMovieDTO
-import com.userslikemovies.springapi.controller.dto.MovieDTO
-import com.userslikemovies.springapi.controller.dto.UserCreationDTO
-import com.userslikemovies.springapi.controller.dto.UserDTO
+import com.userslikemovies.springapi.controller.dto.*
+import com.userslikemovies.springapi.domain.User
 import com.userslikemovies.springapi.service.IUserService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
@@ -17,24 +16,20 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
-import org.hamcrest.Matchers
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.hamcrest.Matchers.equalTo
-import org.springframework.test.web.servlet.get
 
 @WebMvcTest(UserController::class)
 @ExtendWith(MockitoExtension::class)
 internal class UserControllerTest {
     @Autowired
-    private val mockMvc: MockMvc? = null
+    private lateinit var mockMvc: MockMvc
 
     @MockBean
-    private val userService: IUserService? = null
+    private lateinit var userService: IUserService
 
     @Test
     @Throws(java.lang.Exception::class)
     fun getUsers_WithAgeParameter_Ok() {
-        mockMvc!!.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/users")
                 .param("age", "25")
         )
@@ -44,34 +39,23 @@ internal class UserControllerTest {
     @Test
     @Throws(java.lang.Exception::class)
     fun getUsers_WithAgeParameter_ReturnsUsers() {
-        val userCreationDTO = UserCreationDTO("john@example.com", "John", "Doe", 25)
-        val userExpected = UserDTO("john@example.com", "John", "Doe", 25, mutableListOf())
-
-        mockMvc!!.perform(
-            MockMvcRequestBuilders.post("/api/v1/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.toJson(userCreationDTO))
-        )
-            .andExpect(MockMvcResultMatchers.status().isOk())
+        val listUser = listOf(User("john@example.com", "John", "Doe", 25))
+        `when`(userService.getUsers(null)).thenReturn(Result.success(listUser))
 
         mockMvc.perform(
             MockMvcRequestBuilders.get("/api/v1/users")
-                .param("age", "25")
         )
             .andExpect(MockMvcResultMatchers.status().isOk())
-
-        mockMvc.get("/api/v1/users")
-            .andExpect {
-                status { isOk() }
-                content { string("Hello World") }
-            }
+            .andExpect(MockMvcResultMatchers.content().json(JsonUtils.toJson(listUser)))
     }
 
     @Test
     @Throws(Exception::class)
     fun createUser_ValidUser_ReturnsCreated() {
         val userCreationDTO = UserCreationDTO("john@example.com", "John", "Doe", 25)
-        mockMvc!!.perform(
+        `when`(userService.createUser(userCreationDTO.asUser())).thenReturn(Result.success(userCreationDTO.asUser()))
+
+        mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtils.toJson(userCreationDTO))
@@ -83,7 +67,7 @@ internal class UserControllerTest {
     @Throws(Exception::class)
     fun updateUser_ValidUser_ReturnsOk() {
         val userDTO = UserDTO("john@example.com", "John", "Doe", 25, mutableListOf())
-        mockMvc!!.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.put("/api/v1/users/{email}", "john.doe@example.com")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtils.toJson(userDTO))
@@ -94,7 +78,7 @@ internal class UserControllerTest {
     @Test
     @Throws(Exception::class)
     fun deleteUser_ExistingEmail_ReturnsOk() {
-        mockMvc!!.perform(MockMvcRequestBuilders.delete("/api/v1/users/{email}", "john@example.com"))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/users/{email}", "john@example.com"))
             .andExpect(MockMvcResultMatchers.status().isOk())
     }
 
@@ -102,18 +86,21 @@ internal class UserControllerTest {
     @Throws(java.lang.Exception::class)
     fun getUserByEmail_ValidEmail_ReturnsUser() {
         val userDTO = UserDTO("john@example.com", "John", "Doe", 25, mutableListOf())
-        mockMvc!!.perform(MockMvcRequestBuilders.get("/api/v1/users/{email}", "john@example.com")
+        `when`(userService.getUserByEmail("john@example.com")).thenReturn(Result.success(userDTO.asUser()))
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users/{email}", "john@example.com")
             .contentType(MediaType.APPLICATION_JSON)
             .content(JsonUtils.toJson(userDTO))
         )
             .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(JsonUtils.toJson(userDTO)))
     }
 
     @Test
     @Throws(Exception::class)
     fun addFavoritesMovie_ValidRequest_ReturnsOk() {
         val addMovieDTO = AddMovieDTO(1)
-        mockMvc!!.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/users/{email}/favoriteMovies", "john@example.com")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JsonUtils.toJson(addMovieDTO))
@@ -124,7 +111,7 @@ internal class UserControllerTest {
     @Test
     @Throws(Exception::class)
     fun deletefavoriteMovie_ValidRequest_ReturnsOk() {
-        mockMvc!!.perform(
+        mockMvc.perform(
             MockMvcRequestBuilders.delete(
                 "/api/v1/users/{email}/favoriteMovies/{movieId}",
                 "john@example.com",
@@ -138,17 +125,21 @@ internal class UserControllerTest {
     @Throws(java.lang.Exception::class)
     fun getMoviePreferenceNumber_ValidMovieId_ReturnsNumber() {
         val movieDTO = MovieDTO(123, "Titanic", "1950-2")
-        mockMvc!!.perform(MockMvcRequestBuilders.get("/api/v1/movies/{movieId}", 123)
+        val favoriteMovieDTO = FavoriteMovieDTO(123, "Titanic", "1950-2", 1)
+        `when`(userService.getMoviePreferenceNumber(123)).thenReturn(Result.success(favoriteMovieDTO))
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/movies/{movieId}", 123)
             .contentType(MediaType.APPLICATION_JSON)
             .content(JsonUtils.toJson(movieDTO))
         )
             .andExpect(MockMvcResultMatchers.status().isOk())
+            .andExpect(MockMvcResultMatchers.content().json(JsonUtils.toJson(favoriteMovieDTO)))
     }
 
     @Test
     @Throws(Exception::class)
     fun movieDeleted_ValidMovieId_ReturnsOk() {
-        mockMvc!!.perform(MockMvcRequestBuilders.delete("/api/v1/movies/{movieId}", 123))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/movies/{movieId}", 123))
             .andExpect(MockMvcResultMatchers.status().isOk())
     }
 }
