@@ -1,8 +1,6 @@
 package com.userslikemovies.springapi.repository
 
-import com.userslikemovies.springapi.Exceptions.MovieNotFoundException
-import com.userslikemovies.springapi.Exceptions.UserAlreadyExistsException
-import com.userslikemovies.springapi.Exceptions.UserNotFoundException
+import com.userslikemovies.springapi.Exceptions.*
 import com.userslikemovies.springapi.config.CustomProperties
 import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
 import com.userslikemovies.springapi.domain.Movie
@@ -25,12 +23,17 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         return jpa.findAll()
     }
 
-    override fun getUserByEmail(email: String): User? {
-        return jpa.findByIdOrNull(email)
+    override fun getUserByEmail(email: String): Pair<User?, UserNotFoundException?> {
+        val user = jpa.findByIdOrNull(email)
+        if (user != null){
+            return Pair(user, null)
+        }else{
+            return Pair(null, UserNotFoundException())
+        }
     }
 
     override fun createUser(user: User): Pair<User?, Exception?>{
-        val doesUserAlreadyExists = getUserByEmail(user.email)
+        val (doesUserAlreadyExists, error) = getUserByEmail(user.email)
         if (doesUserAlreadyExists != null) {
             return Pair(null, UserAlreadyExistsException())
         }
@@ -42,7 +45,11 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
     }
 
     override fun updateUser(email : String, user : User): Pair<User?, Exception?> {
-        getUserByEmail(email) ?: return Pair(null, UserNotFoundException())
+        val (doesUserExists, error) = getUserByEmail(user.email)
+        if (doesUserExists == null){
+            return Pair(null, UserNotFoundException())
+        }
+
 
         val userByEmail = jpa.findById(email).get()
         userByEmail.firstName = user.firstName
@@ -57,13 +64,18 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
         }
     }
 
-    override fun deleteUser(email: String): User? {
+    override fun deleteUser(email: String): Pair<User?, UserNotFoundException?>{
+        val (doesUserExists, error) = getUserByEmail(email)
+        if (doesUserExists == null){
+            return Pair(null, UserNotFoundException())
+        }
+
         val user = jpa.findById(email)
         return if (user.isPresent) {
             jpa.delete(user.get())
-            user.get()
+            Pair(user.get(), null)
         } else {
-            null
+            Pair(null, null)
         }
     }
 
@@ -74,13 +86,23 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
         val user = jpa.findById(email)
         val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
+        var alreadyInFavorites = false
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
                 val userDomain = user.get()
-                userDomain.favoriteMovies.add(movie.body!!.toMovie())
-                jpa.save(userDomain)
-                Pair(userDomain, null)
+                userDomain.favoriteMovies.forEach {
+                    if (it!!.id == movieId){
+                        alreadyInFavorites = true
+                    }
+                }
+                if (alreadyInFavorites){
+                    Pair(null, MovieAlreadyInFavorites())
+                }else{
+                    userDomain.favoriteMovies.add(movie.body!!.toMovie())
+                    jpa.save(userDomain)
+                    Pair(userDomain, null)
+                }
             } else {
                 Pair(null, UserNotFoundException())
             }
@@ -95,12 +117,23 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
         val user = jpa.findById(email)
         val movie : ResponseEntity<MovieAPI> = restTemplate.getForEntity("/api/v1/movies/${movieId}")
+        var movieInFavorites = true
 
         if (movie.body!!.name.isNotEmpty()) {
             return if (user.isPresent) {
-                user.get().favoriteMovies.removeIf { it!!.id == movieId }
-                jpa.save(user.get())
-                Pair(user.get(), null)
+                user.get().favoriteMovies.forEach {
+                    if (it!!.id == movieId){
+                        user.get().favoriteMovies.remove(it)
+                    }else{
+                        movieInFavorites = false
+                    }
+                }
+                if (movieInFavorites){
+                    jpa.save(user.get())
+                    Pair(user.get(), null)
+                }else{
+                    Pair(null, MovieNotInFavorites())
+                }
             } else {
                 Pair(null, UserNotFoundException())
             }

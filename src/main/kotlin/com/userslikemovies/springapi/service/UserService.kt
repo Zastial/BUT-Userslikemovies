@@ -25,7 +25,7 @@ class UserService(private val userRepository : IUserRepository) : IUserService {
     }
 
     override fun getUserByEmail(email: String): Result<User> {
-        val user = userRepository.getUserByEmail(email)
+        val (user, error) = userRepository.getUserByEmail(email)
         if (user != null) {
             return Result.success(user)
         }
@@ -49,11 +49,11 @@ class UserService(private val userRepository : IUserRepository) : IUserService {
     }
 
     override fun deleteUser(email: String): Result<User> {
-        val deletedUser = userRepository.deleteUser(email)
-        if (deletedUser != null) {
-            return Result.success(deletedUser)
+        val (deletedUser, error) = userRepository.deleteUser(email)
+        if (error != null) {
+            return Result.failure(error)
         }
-        return Result.failure(Exception("Error while deleting user"))
+        return Result.success(deletedUser!!)
     }
 
     override fun addUserFavoriteMovie(email: String, movieId: Int): Result<User> {
