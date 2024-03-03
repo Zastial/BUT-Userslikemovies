@@ -20,6 +20,26 @@ Faute de temps, cela n'a pas été fait.
 
 Nous avons écrit des tests pour les méthodes du controller. Nous avons utilisé JUnit et Mockito pour les tests.
 
+### Manque de tests
+
+Dans UserRepositoryTest, les cas de tests suivants ne sont pas implémentés :
+
+    @Test
+    fun addUserFavoriteMovie() {}
+
+    @Test
+    fun removeUserFavoriteMovie() {}
+
+    @Test
+    fun movieDeleted() {}
+
+    @Test
+    fun getMoviePreferenceNumber() {}
+
+En effet, à cause du restTemplate, nous n'avons pas réussi à mocker les appels à l'API externe. Nous avons donc décidé de ne pas implémenter ces tests.
+
+Solution : Résoudre le problème de conception
+
 ## Base de données
 
 Nous avons utilisé une base de données H2 pour stocker les données. Nous avons utilisé JPA pour la persistance des données.
