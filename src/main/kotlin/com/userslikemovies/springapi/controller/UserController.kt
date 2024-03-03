@@ -22,13 +22,13 @@ class UserController(val userService: IUserService, private val customProperties
     @GetMapping("/api/v1/users")
     fun getUsers(@RequestParam age : Int?): ResponseEntity<out Any> {
         logger.info("Get all users")
-        var result = userService.getUsers(age)
+        val result = userService.getUsers(age)
         if (result.isSuccess){
             if (result.getOrNull() != null){
-                if (result.getOrNull()!!.size < 10){
-                    return ResponseEntity.status(HttpStatus.OK).body(result)
+                return if (result.getOrNull()!!.size < 10){
+                    ResponseEntity.status(HttpStatus.OK).body(result)
                 }else{
-                    return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(result.getOrNull()!!.take(10))
+                    ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(result.getOrNull()!!.take(10))
                 }
             }
         }
@@ -41,7 +41,7 @@ class UserController(val userService: IUserService, private val customProperties
         if (apiKey != customProperties.apiKey) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(FunctionnalError("401", "Unauthorized").toString())
         }
-        var result = userService.createUser(userDTO.asUser())
+        val result = userService.createUser(userDTO.asUser())
         if (result.isFailure){
             if (result.exceptionOrNull() != null){
                 if (result.exceptionOrNull() is UserAlreadyExistsException){
@@ -60,7 +60,7 @@ class UserController(val userService: IUserService, private val customProperties
         if (apiKey != customProperties.apiKey){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(FunctionnalError("401", "Unauthorized").toString())
         }
-        var result = userService.updateUser(email, userDTO.asUser())
+        val result = userService.updateUser(email, userDTO.asUser())
         if (result.isFailure){
             if (result.exceptionOrNull() != null) {
                 if (result.exceptionOrNull() is UserNotFoundException) {
@@ -107,7 +107,7 @@ class UserController(val userService: IUserService, private val customProperties
     @PostMapping("api/v1/users/{email}/favoriteMovies")
     fun addFavoritesMovie(@PathVariable @Email email : String, @RequestBody addMovie : AddMovieDTO): ResponseEntity<out Any> {
         logger.info("Add a favorite movie of a user")
-       var result = userService.addUserFavoriteMovie(email, addMovie.movieId)
+       val result = userService.addUserFavoriteMovie(email, addMovie.movieId)
         if (result.isFailure){
             if (result.exceptionOrNull() != null){
                 if (result.exceptionOrNull() is MovieNotFoundException){
@@ -125,15 +125,15 @@ class UserController(val userService: IUserService, private val customProperties
     @DeleteMapping("api/v1/users/{email}/favoriteMovies/{movieId}")
     fun deletefavoriteMovie(@PathVariable @Email email : String, @PathVariable movieId : Int): ResponseEntity<out Any> {
         logger.info("Delete a favorite movie of a user")
-        var result = userService.removeUserFavoriteMovie(email, movieId)
+        val result = userService.removeUserFavoriteMovie(email, movieId)
         if (result.isFailure){
             if (result.exceptionOrNull() != null){
-                if (result.exceptionOrNull() is UserNotFoundException){
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "User not found").toString())
+                return if (result.exceptionOrNull() is UserNotFoundException){
+                    ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "User not found").toString())
                 }else if (result.exceptionOrNull() is MovieNotInFavorites){
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("400", "Movie not in favorites").toString())
+                    ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("400", "Movie not in favorites").toString())
                 }else{
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "Movie not found").toString())
+                    ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "Movie not found").toString())
                 }
             }
         }
@@ -143,7 +143,7 @@ class UserController(val userService: IUserService, private val customProperties
     @GetMapping("api/v1/movies/{movieId}")
     fun getMoviePreferenceNumber(@PathVariable movieId : Int): ResponseEntity<out Any> {
         logger.info("Get the number of users who have bookmarked the movie")
-        var result = userService.getMoviePreferenceNumber(movieId)
+        val result = userService.getMoviePreferenceNumber(movieId)
         if (result.isFailure){
             if (result.exceptionOrNull() != null){
                 if (result.exceptionOrNull() is MovieNotFoundException){
@@ -157,15 +157,14 @@ class UserController(val userService: IUserService, private val customProperties
     @DeleteMapping("api/v1/movies/{movieId}")
     fun movieDeleted(@RequestHeader apiKey : String, @PathVariable movieId : Int): ResponseEntity<out Any> {
         logger.info("Delete a movie")
-        if (apiKey == customProperties.apiKey){
-            var result = userService.movieDeleted(movieId)
-            if (result ==  null){
-                return ResponseEntity.status(HttpStatus.OK).body(result)
-            }else{
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "Movie not found").toString())
+        return if (apiKey == customProperties.apiKey){
+            val result = userService.movieDeleted(movieId)
+            if (result != null){
+                ResponseEntity.status(HttpStatus.NOT_FOUND).body(FunctionnalError("404", "Movie not found").toString())
             }
+            ResponseEntity.status(HttpStatus.OK).body(result)
         }else{
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(FunctionnalError("401", "Unauthorized").toString())
+            ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(FunctionnalError("401", "Unauthorized").toString())
         }
     }
 }

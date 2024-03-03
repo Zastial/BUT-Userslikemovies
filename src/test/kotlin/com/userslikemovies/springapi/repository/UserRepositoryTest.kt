@@ -14,7 +14,9 @@ import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.ResponseEntity
+import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
 import java.util.*
 
@@ -53,10 +55,10 @@ class UserRepositoryTest {
 
         val result = userRepository.getUserByEmail(user.email)
 
-        assertThat(result!!.email).isEqualTo(user.email)
-        assertThat(result.firstName).isEqualTo(user.firstName)
-        assertThat(result.lastName).isEqualTo(user.lastName)
-        assertThat(result.age).isEqualTo(user.age)
+        assertThat(result.first!!.email).isEqualTo(user.email)
+        assertThat(result.first!!.firstName).isEqualTo(user.firstName)
+        assertThat(result.first!!.lastName).isEqualTo(user.lastName)
+        assertThat(result.first!!.age).isEqualTo(user.age)
     }
 
     @Test
@@ -91,29 +93,21 @@ class UserRepositoryTest {
 
         val result = userRepository.deleteUser(user.email)
 
-        assertThat(result!!.email).isEqualTo(user.email)
-        assertThat(result.firstName).isEqualTo(user.firstName)
-        assertThat(result.lastName).isEqualTo(user.lastName)
-        assertThat(result.age).isEqualTo(user.age)
+        assertThat(result.first!!.email).isEqualTo(user.email)
+        assertThat(result.first!!.firstName).isEqualTo(user.firstName)
+        assertThat(result.first!!.lastName).isEqualTo(user.lastName)
+        assertThat(result.first!!.age).isEqualTo(user.age)
     }
 
     @Test
-    fun addUserFavoriteMovie() {
-
-    }
+    fun addUserFavoriteMovie() {}
 
     @Test
-    fun removeUserFavoriteMovie() {
-
-    }
+    fun removeUserFavoriteMovie() {}
 
     @Test
-    fun movieDeleted() {
-
-    }
+    fun movieDeleted() {}
 
     @Test
-    fun getMoviePreferenceNumber() {
-
-    }
+    fun getMoviePreferenceNumber() {}
 }

@@ -36,7 +36,7 @@ class UserServiceTest {
     @Test
     fun getUserByEmail() {
         val user = (User("john@example.com", "John", "Doe", 25))
-        `when`(userRepository.getUserByEmail(user.email)).thenReturn(user)
+        `when`(userRepository.getUserByEmail(user.email)).thenReturn(Pair(user, null))
 
         val result = userService.getUserByEmail(user.email)
 
@@ -71,7 +71,7 @@ class UserServiceTest {
     @Test
     fun deleteUser() {
         val user = (User("john@example.com", "John", "Doe", 25))
-        `when`(userRepository.deleteUser(user.email)).thenReturn(user)
+        `when`(userRepository.deleteUser(user.email)).thenReturn(Pair(user, null))
 
         val result = userService.deleteUser(user.email)
 
