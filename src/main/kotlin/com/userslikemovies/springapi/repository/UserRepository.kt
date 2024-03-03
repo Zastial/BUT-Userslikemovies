@@ -1,6 +1,5 @@
 package com.userslikemovies.springapi.repository
 
-import com.userslikemovies.springapi.Exceptions.InvalidMovieIdException
 import com.userslikemovies.springapi.Exceptions.MovieNotFoundException
 import com.userslikemovies.springapi.Exceptions.UserAlreadyExistsException
 import com.userslikemovies.springapi.Exceptions.UserNotFoundException
@@ -70,7 +69,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun addUserFavoriteMovie(email: String, movieId: Int): Pair<User?, Exception?> {
         if (movieId < 0) {
-            return Pair(null, InvalidMovieIdException())
+            return Pair(null, MovieNotFoundException())
         }
 
         val user = jpa.findById(email)
@@ -91,7 +90,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun removeUserFavoriteMovie(email: String, movieId: Int): Pair<User?, Exception?> {
         if (movieId < 0) {
-            return Pair(null, InvalidMovieIdException())
+            return Pair(null, MovieNotFoundException())
         }
 
         val user = jpa.findById(email)
@@ -111,7 +110,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun movieDeleted(movieId: Int): Exception? {
         if (movieId < 0) {
-            return InvalidMovieIdException()
+            return MovieNotFoundException()
         }
 
         val users = jpa.findAll()
@@ -129,7 +128,7 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun getMoviePreferenceNumber(movieId: Int): Pair<FavoriteMovieDTO?, Exception?> {
         if (movieId < 0) {
-            return Pair(null, InvalidMovieIdException())
+            return Pair(null, MovieNotFoundException())
         }
 
         val users = jpa.findAll()

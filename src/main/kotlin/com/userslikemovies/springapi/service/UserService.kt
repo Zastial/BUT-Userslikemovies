@@ -5,10 +5,13 @@ import com.userslikemovies.springapi.Exceptions.UserNotFoundException
 import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
 import com.userslikemovies.springapi.domain.User
 import com.userslikemovies.springapi.repository.IUserRepository
+import io.micrometer.core.instrument.Counter
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Service
 
 @Service
 class UserService(private val userRepository : IUserRepository) : IUserService {
+
     override fun getUsers(age : Int?) : Result<List<User>>  {
         return if (age != null) {
             if (age >= 15) {
