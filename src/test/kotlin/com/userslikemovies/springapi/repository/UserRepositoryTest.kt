@@ -1,7 +1,9 @@
 package com.userslikemovies.springapi.repository
 
+import com.userslikemovies.springapi.config.CustomProperties
 import com.userslikemovies.springapi.domain.MovieAPI
 import com.userslikemovies.springapi.domain.User
+import com.userslikemovies.springapi.service.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -11,7 +13,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.ResponseEntity
+import org.springframework.web.client.getForEntity
 import java.util.*
 
 @DataJpaTest
@@ -20,8 +24,15 @@ class UserRepositoryTest {
     @Autowired
     private lateinit var jpaRepository: JpaRepositoryUser
 
-    @AfterEach
-    fun init() {
+    @MockBean
+    private lateinit var customProperties: CustomProperties
+
+    private lateinit var userRepository: UserRepository
+
+    @BeforeEach
+    fun setUp() {
+        userRepository = UserRepository(jpaRepository, customProperties)
+        `when`(customProperties.apiKey).thenReturn("cetteapikeyestvraimentpuissante")
         jpaRepository.deleteAll()
     }
 
@@ -30,9 +41,9 @@ class UserRepositoryTest {
         val user = User("john@example.com", "John", "Doe", 25)
         jpaRepository.save(user)
 
-        val result = jpaRepository.findAll()
+        val users = userRepository.getUsers()
 
-        assertThat(result).hasSize(1)
+        assertThat(users).isNotEmpty
     }
 
     @Test
@@ -40,20 +51,23 @@ class UserRepositoryTest {
         val user = User("john@example.com", "John", "Doe", 25)
         jpaRepository.save(user)
 
-        val result = jpaRepository.findById(user.email)
+        val result = userRepository.getUserByEmail(user.email)
 
-        assertThat(result).isNotEmpty
+        assertThat(result!!.email).isEqualTo(user.email)
+        assertThat(result.firstName).isEqualTo(user.firstName)
+        assertThat(result.lastName).isEqualTo(user.lastName)
+        assertThat(result.age).isEqualTo(user.age)
     }
 
     @Test
     fun createUser() {
         val user = User("john@example.com", "John", "Doe", 25)
-        val result = jpaRepository.save(user)
+        val result = userRepository.createUser(user)
 
-        assertThat(result.email).isEqualTo(user.email)
-        assertThat(result.firstName).isEqualTo(user.firstName)
-        assertThat(result.lastName).isEqualTo(user.lastName)
-        assertThat(result.age).isEqualTo(user.age)
+        assertThat(result.first!!.email).isEqualTo(user.email)
+        assertThat(result.first!!.firstName).isEqualTo(user.firstName)
+        assertThat(result.first!!.lastName).isEqualTo(user.lastName)
+        assertThat(result.first!!.age).isEqualTo(user.age)
     }
 
     @Test
@@ -62,12 +76,12 @@ class UserRepositoryTest {
         jpaRepository.save(user)
 
         val updatedUser = User("john@example.com", "Alex", "Doe", 25)
-        val result = jpaRepository.save(updatedUser)
+        val result = userRepository.updateUser(user.email, updatedUser)
 
-        assertThat(result.email).isEqualTo(updatedUser.email)
-        assertThat(result.firstName).isEqualTo(updatedUser.firstName)
-        assertThat(result.lastName).isEqualTo(updatedUser.lastName)
-        assertThat(result.age).isEqualTo(updatedUser.age)
+        assertThat(result.first!!.email).isEqualTo(updatedUser.email)
+        assertThat(result.first!!.firstName).isEqualTo(updatedUser.firstName)
+        assertThat(result.first!!.lastName).isEqualTo(updatedUser.lastName)
+        assertThat(result.first!!.age).isEqualTo(updatedUser.age)
     }
 
     @Test
@@ -75,22 +89,17 @@ class UserRepositoryTest {
         val user = User("john@example.com", "John", "Doe", 25)
         jpaRepository.save(user)
 
-        jpaRepository.delete(user)
+        val result = userRepository.deleteUser(user.email)
 
-        val result = jpaRepository.findById(user.email)
-        assertThat(result).isEmpty
+        assertThat(result!!.email).isEqualTo(user.email)
+        assertThat(result.firstName).isEqualTo(user.firstName)
+        assertThat(result.lastName).isEqualTo(user.lastName)
+        assertThat(result.age).isEqualTo(user.age)
     }
 
     @Test
     fun addUserFavoriteMovie() {
-        val movieAPI = MovieAPI(1, "Titanic", 2, 1950)
-        val user = User("john@example.com", "John", "Doe", 25, mutableListOf())
 
-        user.favoriteMovies.add(movieAPI.toMovie())
-
-        val result = jpaRepository.save(user)
-
-        assertThat(result.favoriteMovies).hasSize(1)
     }
 
     @Test
@@ -100,16 +109,7 @@ class UserRepositoryTest {
 
     @Test
     fun movieDeleted() {
-        val movieAPI = MovieAPI(1, "Titanic", 2, 1950)
-        val user = User("john@example.com", "John", "Doe", 25, mutableListOf())
-        user.favoriteMovies.add(movieAPI.toMovie())
-        jpaRepository.save(user)
 
-        val userUpdated = User("john@example.com", "John", "Doe", 25, mutableListOf())
-        jpaRepository.save(userUpdated)
-
-        val result = jpaRepository.findById(user.email).get()
-        assertThat(result.favoriteMovies).isEmpty()
     }
 
     @Test

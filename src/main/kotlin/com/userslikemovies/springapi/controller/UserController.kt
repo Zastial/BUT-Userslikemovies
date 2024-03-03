@@ -5,28 +5,14 @@ import com.userslikemovies.springapi.config.CustomProperties
 import com.userslikemovies.springapi.controller.dto.AddMovieDTO
 import com.userslikemovies.springapi.controller.dto.UserCreationDTO
 import com.userslikemovies.springapi.controller.dto.UserDTO
-import com.userslikemovies.springapi.domain.User
 import com.userslikemovies.springapi.error.FunctionnalError
-import com.userslikemovies.springapi.repository.IUserRepository
 import com.userslikemovies.springapi.service.IUserService
-import com.userslikemovies.springapi.service.UserService
 import jakarta.validation.constraints.Email
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
-import io.micrometer.core.instrument.Counter
-import io.micrometer.core.instrument.MeterRegistry
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @Validated
