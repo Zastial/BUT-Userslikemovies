@@ -3,7 +3,6 @@ package com.userslikemovies.springapi.repository
 import com.userslikemovies.springapi.Exceptions.*
 import com.userslikemovies.springapi.config.CustomProperties
 import com.userslikemovies.springapi.controller.dto.FavoriteMovieDTO
-import com.userslikemovies.springapi.domain.Movie
 import com.userslikemovies.springapi.domain.MovieAPI
 import com.userslikemovies.springapi.domain.User
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -12,7 +11,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Repository
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForEntity
-import java.util.*
 
 @Repository
 class UserRepository(val jpa : JpaRepositoryUser, private val customProperties : CustomProperties) : IUserRepository {
@@ -25,16 +23,16 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
 
     override fun getUserByEmail(email: String): Pair<User?, UserNotFoundException?> {
         val user = jpa.findByIdOrNull(email)
-        if (user != null){
-            return Pair(user, null)
+        return if (user != null){
+            Pair(user, null)
         }else{
-            return Pair(null, UserNotFoundException())
+            Pair(null, UserNotFoundException())
         }
     }
 
     override fun createUser(user: User): Pair<User?, Exception?>{
-        val (doesUserAlreadyExists, error) = getUserByEmail(user.email)
-        if (doesUserAlreadyExists != null) {
+        val (_, error) = getUserByEmail(user.email)
+        if (error != null) {
             return Pair(null, UserAlreadyExistsException())
         }
         return try {
@@ -45,28 +43,30 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
     }
 
     override fun updateUser(email : String, user : User): Pair<User?, Exception?> {
-        val (doesUserExists, error) = getUserByEmail(user.email)
-        if (doesUserExists == null){
+        val (userByEmail, error) = getUserByEmail(user.email)
+        if (error != null){
             return Pair(null, UserNotFoundException())
         }
 
+        if (userByEmail != null){
+            userByEmail.firstName = user.firstName
+            userByEmail.lastName = user.lastName
+            userByEmail.age = user.age
+            userByEmail.favoriteMovies = user.favoriteMovies
 
-        val userByEmail = jpa.findById(email).get()
-        userByEmail.firstName = user.firstName
-        userByEmail.lastName = user.lastName
-        userByEmail.age = user.age
-        userByEmail.favoriteMovies = user.favoriteMovies
-
-        return try {
-            Pair(jpa.save(userByEmail), null)
-        } catch (e: Exception) {
-            Pair(null, e)
+            return try {
+                Pair(jpa.save(userByEmail), null)
+            } catch (e: Exception) {
+                Pair(null, e)
+            }
         }
+
+        return Pair(null, UserNotFoundException())
     }
 
     override fun deleteUser(email: String): Pair<User?, UserNotFoundException?>{
-        val (doesUserExists, error) = getUserByEmail(email)
-        if (doesUserExists == null){
+        val (_, error) = getUserByEmail(email)
+        if (error != null){
             return Pair(null, UserNotFoundException())
         }
 
