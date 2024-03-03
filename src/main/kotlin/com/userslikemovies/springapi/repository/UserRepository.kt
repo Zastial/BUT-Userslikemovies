@@ -31,8 +31,8 @@ class UserRepository(val jpa : JpaRepositoryUser, private val customProperties :
     }
 
     override fun createUser(user: User): Pair<User?, Exception?>{
-        val (_, error) = getUserByEmail(user.email)
-        if (error != null) {
+        val (doesUserAlreadyExists, _) = getUserByEmail(user.email)
+        if (doesUserAlreadyExists  != null) {
             return Pair(null, UserAlreadyExistsException())
         }
         return try {

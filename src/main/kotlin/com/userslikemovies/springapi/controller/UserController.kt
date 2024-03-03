@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @Validated
-//@Tag(name = "admin", description = "Contrôleur pour gérer les utilisateurs en tant qu'administrateur")
-//@Tag(name = "default", description = "Contrôleur par défaut pour gérer les utilisateurs")
 class UserController(val userService: IUserService, private val customProperties : CustomProperties) {
     private val logger = LoggerFactory.getLogger(javaClass)
 

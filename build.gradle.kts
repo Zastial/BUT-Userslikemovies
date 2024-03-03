@@ -32,6 +32,7 @@ dependencies {
 	testImplementation("io.mockk:mockk:1.13.8")
 	testImplementation("com.ninja-squad:springmockk:4.0.2")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+	implementation ("org.springframework.boot:spring-boot-starter-web")
 }
 
 tasks.withType<KotlinCompile> {
