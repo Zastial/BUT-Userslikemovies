@@ -11,5 +11,6 @@ class InvalidAgeException() : Exception("Invalid age : Age must be greater than 
 class MovieNotInFavorites() : Exception("Movie not in favorites")
 
 class InvalidPayload() : Exception("Invalid Payload")
+
 class MovieAlreadyInFavorites() : Exception("Movie already in favorites")
 
